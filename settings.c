@@ -34,11 +34,6 @@ void InitSettings(void)
 
 void UpdateSettings(void)
 {
-    if (IsKeyPressed(KEY_BACKSPACE))
-    {
-        currentScreen = SCREEN_TITLE;
-    }
-
     Vector2 mousePosition = GetMousePosition();
 
     backButtonHovered = CheckCollisionPointRec(mousePosition, backButton);

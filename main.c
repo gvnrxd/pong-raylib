@@ -21,14 +21,17 @@ int main(void)
         {
         case SCREEN_TITLE:
             UpdateTitleScreen();
+            ShowCursor();
             break;
 
         case SCREEN_GAME:
             UpdateGame();
+            HideCursor();
             break;
 
         case SCREEN_SETTINGS:
             UpdateSettings();
+            ShowCursor();
             break;
         }
 
