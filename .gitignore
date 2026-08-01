@@ -1,0 +1,12 @@
+# Compiled object files
+*.o
+
+# Compiled executable
+game
+
+# macOS
+.DS_Store
+
+# Editor settings
+.vscode/
+.idea/
