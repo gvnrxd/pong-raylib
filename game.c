@@ -12,10 +12,15 @@ static const int centerLineThickness = 5;
 static const int edgeSpacing = 30;
 static const int paddleThickness = 10;
 static const int paddleHeight = 120;
-static const float ballRadius = 20.0f;
-const float speed = 10.0f;
+static const int winningScore = 10;
+
+static int player1Score;
+static int player2Score;
+
 static float ballVelocityX = 300.0f;
-bool collision;
+static const float ballRadius = 20.0f;
+
+const float speed = 10.0f;
 
 static Vector2 bar2Position;
 static Vector2 bar1Position;
@@ -28,7 +33,9 @@ void InitGame(void)
         GetScreenHeight() / 2.0f};
 
     ballPosition = (Vector2){GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
-    collision = false;
+
+    player1Score = 0;
+    player2Score = 0;
 }
 
 void UpdateGame(void)
@@ -89,9 +96,26 @@ void UpdateGame(void)
             bar1Rectangle.x + bar1Rectangle.width + ballRadius;
     }
 
-    if (ballPosition.x < 0 || ballPosition.x > GetScreenWidth())
+    // Gives points to player
+    if (ballPosition.x - ballRadius > GetScreenWidth())
+    {
+        player1Score++;
+    }
+    if (ballPosition.x - ballRadius < 0)
+    {
+        player2Score++;
+    }
+    if (ballPosition.x - ballRadius < 0 || ballPosition.x - ballRadius > GetScreenWidth())
     {
         ballPosition.x = GetScreenWidth() / 2;
+    }
+
+    // Displays winning score
+    if (player1Score == 10)
+    {
+    }
+    if (player2Score == 10)
+    {
     }
 }
 
@@ -131,6 +155,27 @@ void DrawGame(void)
 
     // Draw Ball
     DrawCircleV(ballPosition, ballRadius, WHITE);
+
+    // Draw Scores
+    const int fontSize = 20;
+    const int scoreGap = 20;
+
+    const char *player1Text = TextFormat("%d", player1Score);
+    int player1TextWidth = MeasureText(player1Text, fontSize);
+
+    DrawText(
+        player1Text,
+        centerX - scoreGap - player1TextWidth,
+        20,
+        fontSize,
+        WHITE);
+
+    DrawText(
+        TextFormat("%d", player2Score),
+        centerX + scoreGap,
+        20,
+        fontSize,
+        WHITE);
 }
 
 void UnloadGame(void)
