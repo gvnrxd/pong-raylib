@@ -4,21 +4,31 @@
 #include "screen.h"
 
 static Rectangle middleBorder;
+static Rectangle bar2Rectangle;
+static Rectangle bar1Rectangle;
+
 static const int borderThickness = 5;
 static const int centerLineThickness = 5;
 static const int edgeSpacing = 30;
 static const int paddleThickness = 10;
 static const int paddleHeight = 120;
+static const float ballRadius = 20.0f;
+const float speed = 10.0f;
+static float ballVelocityX = 300.0f;
+bool collision;
 
 static Vector2 bar2Position;
 static Vector2 bar1Position;
+static Vector2 ballPosition;
 
 void InitGame(void)
 {
-
     bar1Position = (Vector2){
         (float)edgeSpacing,
         GetScreenHeight() / 2.0f};
+
+    ballPosition = (Vector2){GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
+    collision = false;
 }
 
 void UpdateGame(void)
@@ -32,14 +42,15 @@ void UpdateGame(void)
         currentScreen = SCREEN_TITLE;
     }
 
-    // Right paddle follows mouse
+    // Update right paddle
     bar2Position = GetMousePosition();
+
     bar2Position.y = Clamp(
         bar2Position.y,
         paddleHeight / 2.0f + 10,
         GetScreenHeight() - paddleHeight / 2.0f - 10);
 
-    // Left paddle uses keyboard
+    // Update left paddle
     if (IsKeyDown(bar1Upkey))
         bar1Position.y -= 12.0f;
     if (IsKeyDown(bar1DownKey))
@@ -48,6 +59,40 @@ void UpdateGame(void)
         bar1Position.y,
         paddleHeight / 2.0f + 10,
         GetScreenHeight() - paddleHeight / 2.0f - 10);
+
+    // Create rectanbles after positions
+    bar1Rectangle = (Rectangle){
+        (float)(edgeSpacing),
+        bar1Position.y - paddleHeight / 2.0f,
+        (float)paddleThickness,
+        (float)paddleHeight};
+    bar2Rectangle = (Rectangle){
+        (float)(GetScreenWidth() - edgeSpacing - paddleThickness),
+        bar2Position.y - paddleHeight / 2.0f,
+        (float)paddleThickness,
+        (float)paddleHeight};
+
+    // Move ball
+    ballPosition.x += ballVelocityX * GetFrameTime();
+    if (ballVelocityX > 0 &&
+        CheckCollisionCircleRec(ballPosition, ballRadius, bar2Rectangle))
+    {
+        ballVelocityX = -ballVelocityX;
+        ballPosition.x = bar2Rectangle.x - ballRadius;
+    }
+
+    if (ballVelocityX < 0 &&
+        CheckCollisionCircleRec(ballPosition, ballRadius, bar1Rectangle))
+    {
+        ballVelocityX = -ballVelocityX;
+        ballPosition.x =
+            bar1Rectangle.x + bar1Rectangle.width + ballRadius;
+    }
+
+    if (ballPosition.x < 0 || ballPosition.x > GetScreenWidth())
+    {
+        ballPosition.x = GetScreenWidth() / 2;
+    }
 }
 
 void DrawGame(void)
@@ -81,19 +126,11 @@ void DrawGame(void)
         WHITE);
 
     // Draw paddles
-    DrawRectangle(
-        edgeSpacing,
-        (int)(bar1Position.y - paddleHeight / 2.0f),
-        paddleThickness,
-        paddleHeight,
-        WHITE);
+    DrawRectangleRec(bar1Rectangle, WHITE);
+    DrawRectangleRec(bar2Rectangle, WHITE);
 
-    DrawRectangle(
-        GetScreenWidth() - edgeSpacing - paddleThickness,
-        (int)(bar2Position.y - paddleHeight / 2.0f),
-        paddleThickness,
-        paddleHeight,
-        WHITE);
+    // Draw Ball
+    DrawCircleV(ballPosition, ballRadius, WHITE);
 }
 
 void UnloadGame(void)
