@@ -12,6 +12,7 @@ int main(void)
     SetTargetFPS(60);
 
     InitTitleScreen();
+    InitSettings();
     InitGame();
 
     while (!WindowShouldClose())
