@@ -5,6 +5,8 @@
 #include "game.h"
 #include "screen.h"
 
+#define MAX_BOUNCE_ANGLE (75.0f * DEG2RAD)
+
 static Rectangle bar2Rectangle;
 static Rectangle bar1Rectangle;
 
@@ -16,13 +18,15 @@ static const int paddleHeight = 120;
 static const int winningScore = 2;
 
 static const float roundCountdown = 3.0f;
-static const float gameCountdown = 5.0f;
+static const float gameCountdown = 3.0f;
 
 static int player1Score;
 static int player2Score;
 
 static float ballTimer;
-static float ballVelocityX = 300.0f;
+static float defaultVelocity = 900.0f;
+static float ballVelocityX = 900.0f;
+static float ballVelocityY = 0.0f;
 static const float ballRadius = 20.0f;
 
 static bool gameOver;
@@ -49,11 +53,32 @@ void InitGame(void)
     player1Score = 0;
     player2Score = 0;
 
-    ballVelocityX = 300.0f;
+    ballVelocityX = defaultVelocity;
+    ballVelocityY = 0.0f;
+
     ballTimer = gameCountdown;
 
     gameWinningText = NULL;
     gameOver = false;
+}
+
+static void BounceFromPaddle(Rectangle paddle, float direction)
+{
+    float paddleCenterY = paddle.y + paddle.height / 2.0f;
+
+    float relativeIntersectY = paddleCenterY - ballPosition.y;
+
+    float normalizedRelativeIntersectionY = relativeIntersectY / (paddle.height / 2.0f);
+
+    normalizedRelativeIntersectionY = Clamp(normalizedRelativeIntersectionY, -1.0f, 1.0f);
+
+    float bounceAngle = normalizedRelativeIntersectionY * MAX_BOUNCE_ANGLE;
+
+    float ballSpeed = sqrtf(ballVelocityX * ballVelocityX + ballVelocityY * ballVelocityY);
+
+    ballVelocityX = direction * ballSpeed * cosf(bounceAngle);
+
+    ballVelocityY = -ballSpeed * sinf(bounceAngle);
 }
 
 void UpdateGame(void)
@@ -78,7 +103,8 @@ void UpdateGame(void)
             GetScreenWidth() / 2.0f,
             GetScreenHeight() / 2.0f};
 
-        ballVelocityX = 300.0f;
+        ballVelocityX = defaultVelocity;
+        ballVelocityY = 0.0f;
         ballTimer = gameCountdown;
         gameWinningText = NULL;
     }
@@ -141,6 +167,22 @@ void UpdateGame(void)
     if (!gameOver && ballTimer <= 0.0f)
     {
         ballPosition.x += ballVelocityX * GetFrameTime();
+        ballPosition.y += ballVelocityY * GetFrameTime();
+
+        // Bounce off the top border
+        if (ballPosition.y - ballRadius <= 10.0f)
+        {
+            ballPosition.y = 10.0f + ballRadius;
+            ballVelocityY = fabsf(ballVelocityY);
+        }
+
+        // Bounce off the bottom border
+        if (ballPosition.y + ballRadius >= GetScreenHeight() - 10.0f)
+        {
+            ballPosition.y =
+                GetScreenHeight() - 10.0f - ballRadius;
+            ballVelocityY = -fabsf(ballVelocityY);
+        }
 
         if (ballVelocityX > 0.0f &&
             CheckCollisionCircleRec(
@@ -148,8 +190,8 @@ void UpdateGame(void)
                 ballRadius,
                 bar2Rectangle))
         {
-            ballVelocityX = -ballVelocityX;
             ballPosition.x = bar2Rectangle.x - ballRadius;
+            BounceFromPaddle(bar2Rectangle, -1.0f);
         }
 
         if (ballVelocityX < 0.0f &&
@@ -158,11 +200,11 @@ void UpdateGame(void)
                 ballRadius,
                 bar1Rectangle))
         {
-            ballVelocityX = -ballVelocityX;
             ballPosition.x =
                 bar1Rectangle.x +
                 bar1Rectangle.width +
                 ballRadius;
+            BounceFromPaddle(bar1Rectangle, 1.0f);
         }
     }
 
@@ -175,7 +217,8 @@ void UpdateGame(void)
             GetScreenWidth() / 2.0f,
             GetScreenHeight() / 2.0f};
 
-        ballVelocityX = -300.0f;
+        ballVelocityX = -defaultVelocity;
+        ballVelocityY = 0.0f;
         ballTimer = roundCountdown;
     }
 
@@ -188,7 +231,8 @@ void UpdateGame(void)
             GetScreenWidth() / 2.0f,
             GetScreenHeight() / 2.0f};
 
-        ballVelocityX = 300.0f;
+        ballVelocityX = defaultVelocity;
+        ballVelocityY = 0.0f;
         ballTimer = roundCountdown;
     }
 
