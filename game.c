@@ -23,13 +23,18 @@ static const float gameCountdown = 3.0f;
 static int player1Score;
 static int player2Score;
 
+static float previousBallVelocityX = 0.0f;
+static float previousBallVelocityY = 0.0f;
 static float ballTimer;
 static float defaultVelocity = 900.0f;
 static float ballVelocityX = 900.0f;
 static float ballVelocityY = 0.0f;
+
 static const float ballRadius = 20.0f;
 
 static bool gameOver;
+static bool gamePaused;
+
 static const char *gameWinningText;
 
 static Vector2 bar2Position;
@@ -60,6 +65,7 @@ void InitGame(void)
 
     gameWinningText = NULL;
     gameOver = false;
+    gamePaused = false;
 }
 
 static void BounceFromPaddle(Rectangle paddle, float direction)
@@ -86,9 +92,32 @@ void UpdateGame(void)
     const KeyboardKey bar1UpKey = KEY_W;
     const KeyboardKey bar1DownKey = KEY_S;
 
+    // Go back to home screen
     if (IsKeyPressed(KEY_BACKSPACE))
     {
         currentScreen = SCREEN_TITLE;
+    }
+
+    // Pause game
+
+    if (IsKeyPressed(KEY_P))
+    {
+        gamePaused = !gamePaused;
+
+        if (gamePaused)
+        {
+
+            previousBallVelocityX = ballVelocityX;
+            previousBallVelocityY = ballVelocityY;
+
+            ballVelocityX = 0.0f;
+            ballVelocityY = 0.0f;
+        }
+        else
+        {
+            ballVelocityX = previousBallVelocityX;
+            ballVelocityY = previousBallVelocityY;
+        }
     }
 
     // Restart game
@@ -344,6 +373,21 @@ void DrawGame(void)
         DrawText(
             gameWinningText,
             GetScreenWidth() / 2 - winningTextWidth / 2,
+            GetScreenHeight() / 2 - largeFontSize / 2,
+            largeFontSize,
+            GREEN);
+    }
+
+    // Draw Pause Screen
+    if (gamePaused)
+    {
+        const char *gamePausedText = "Paused";
+
+        int gamePausedTextWidth = MeasureText(gamePausedText, largeFontSize);
+
+        DrawText(
+            gamePausedText,
+            GetScreenWidth() / 2 - gamePausedTextWidth / 2,
             GetScreenHeight() / 2 - largeFontSize / 2,
             largeFontSize,
             GREEN);
