@@ -26,7 +26,6 @@ int main(void)
 
         case SCREEN_GAME:
             UpdateGame();
-            HideCursor();
             break;
 
         case SCREEN_SETTINGS:
